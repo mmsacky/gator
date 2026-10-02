@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"log"
+	"os"
 
 	"github.com/mmsacky/gator/internal/config"
 )
@@ -14,15 +14,29 @@ func main() {
 		log.Fatalf("Critical error opening config: %v", err)
 	}
 
-	err = cfg.SetUser("Mike")
-	if err != nil {
-		log.Fatalf("Critical writing to config file: %v", err)
+	myState := state{
+		ConfigPTR: &cfg,
 	}
 
-	updatedCFG, err := config.Read()
-	if err != nil {
-		log.Fatalf("Critical error opening updated config: %v", err)
+	myCommands := commands{
+		commandMap: make(map[string]func(*state, command) error),
 	}
 
-	fmt.Println(updatedCFG)
+	myCommands.register("login", handlerLogin)
+
+	userArgsCount := len(os.Args)
+
+	if userArgsCount < 2 {
+		log.Fatalln("Error occurred: not enough arguments")
+	}
+
+	myCommand := command{
+		name: os.Args[1],
+		args: os.Args[2:],
+	}
+
+	err = myCommands.run(&myState, myCommand)
+	if err != nil {
+		log.Fatalln("Error occurred:", err)
+	}
 }
