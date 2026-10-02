@@ -14,8 +14,16 @@ import (
 
 const createUser = `-- name: CreateUser :one
 
-INSERT INTO users (id, created_at, updated_at, name)
-VALUES ($1, $2, $3, $4) RETURNING id, created_at, updated_at, name
+INSERT INTO
+    users (
+        id,
+        created_at,
+        updated_at,
+        name
+    )
+VALUES ($1, $2, $3, $4)
+RETURNING
+    id, created_at, updated_at, name
 `
 
 type CreateUserParams struct {
@@ -44,9 +52,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 
 const getUser = `-- name: GetUser :one
 
-SELECT id, created_at, updated_at, name
-FROM users
-WHERE name = $1
+SELECT id, created_at, updated_at, name FROM users WHERE name = $1
 `
 
 func (q *Queries) GetUser(ctx context.Context, name string) (User, error) {
@@ -59,4 +65,46 @@ func (q *Queries) GetUser(ctx context.Context, name string) (User, error) {
 		&i.Name,
 	)
 	return i, err
+}
+
+const getUsers = `-- name: GetUsers :many
+SELECT id, created_at, updated_at, name FROM users
+`
+
+func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
+	rows, err := q.db.QueryContext(ctx, getUsers)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []User
+	for rows.Next() {
+		var i User
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Name,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const resetDB = `-- name: ResetDB :exec
+
+TRUNCATE TABLE users
+`
+
+func (q *Queries) ResetDB(ctx context.Context) error {
+	_, err := q.db.ExecContext(ctx, resetDB)
+	return err
 }

@@ -25,7 +25,7 @@ func handlerLogin(s *state, cmd command) error {
 
 	s.cfg.SetUser(username)
 
-	fmt.Printf("%s has been set as the current username", username)
+	fmt.Printf("%s has been set as the current username\n", username)
 
 	return nil
 }

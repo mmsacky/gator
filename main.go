@@ -32,6 +32,8 @@ func main() {
 
 	myCommands.register("login", handlerLogin)
 	myCommands.register("register", handlerRegister)
+	myCommands.register("reset", handlerReset)
+	myCommands.register("users", handlerUsers)
 
 	userArgsCount := len(os.Args)
 
