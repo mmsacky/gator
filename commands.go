@@ -5,10 +5,12 @@ import (
 	"fmt"
 
 	"github.com/mmsacky/gator/internal/config"
+	"github.com/mmsacky/gator/internal/database"
 )
 
 type state struct {
-	ConfigPTR *config.Config
+	db  *database.Queries
+	cfg *config.Config
 }
 
 type command struct {
@@ -25,7 +27,7 @@ func (c *commands) run(s *state, cmd command) error {
 	if command, exists := c.commandMap[cmd.name]; exists {
 		err := command(s, cmd)
 		if err != nil {
-			return fmt.Errorf("unable to run command %w", err)
+			return fmt.Errorf("unable to run command: %w", err)
 		}
 	} else {
 		return errors.New("command doesn't exist")

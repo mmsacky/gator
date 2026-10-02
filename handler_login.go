@@ -1,8 +1,11 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
+
+	"github.com/mmsacky/gator/internal/database"
 )
 
 func handlerLogin(s *state, cmd command) error {
@@ -11,9 +14,16 @@ func handlerLogin(s *state, cmd command) error {
 		return errors.New("the login handler expects a single argument, the username")
 	}
 
+	context := context.Background()
 	username := cmd.args[0]
 
-	s.ConfigPTR.SetUser(username)
+	user, _ := s.db.GetUser(context, username)
+
+	if user == (database.User{}) {
+		return errors.New("this user doesn't exist in the database")
+	}
+
+	s.cfg.SetUser(username)
 
 	fmt.Printf("%s has been set as the current username", username)
 
