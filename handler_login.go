@@ -14,10 +14,10 @@ func handlerLogin(s *state, cmd command) error {
 		return errors.New("the login handler expects a single argument, the username")
 	}
 
-	context := context.Background()
+	ctx := context.Background()
 	username := cmd.args[0]
 
-	user, _ := s.db.GetUser(context, username)
+	user, _ := s.db.GetUser(ctx, username)
 
 	if user == (database.User{}) {
 		return errors.New("this user doesn't exist in the database")

@@ -34,6 +34,7 @@ func main() {
 	myCommands.register("register", handlerRegister)
 	myCommands.register("reset", handlerReset)
 	myCommands.register("users", handlerUsers)
+	myCommands.register("agg", aggregator)
 
 	userArgsCount := len(os.Args)
 
