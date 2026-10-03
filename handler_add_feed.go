@@ -12,28 +12,30 @@ import (
 
 func handlerAddFeed(s *state, cmd command) error {
 
-	if len(cmd.args) < 2 {
-		return errors.New("the add feed handler expects a two arguments, a feed name and a feed url")
+	if len(cmd.args) != 2 {
+		return errors.New("the add feed handler expects two arguments, a feed name and a feed url")
 	}
 
 	feedName := cmd.args[0]
 	feedURL := cmd.args[1]
 
 	ctx := context.Background()
+	now := time.Now()
+
 	currentUser := s.cfg.UserName
 
-	dbUser, err := s.db.GetUser(ctx, currentUser)
+	user, err := s.db.GetUser(ctx, currentUser)
 	if err != nil {
 		return fmt.Errorf("error retrieving database user: %w", err)
 	}
 
 	newFeedParams := database.CreateFeedParams{
 		ID:        uuid.New(),
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		CreatedAt: now,
+		UpdatedAt: now,
 		Name:      feedName,
 		Url:       feedURL,
-		UserID:    dbUser.ID,
+		UserID:    user.ID,
 	}
 
 	newFeed, err := s.db.CreateFeed(ctx, newFeedParams)
@@ -42,6 +44,21 @@ func handlerAddFeed(s *state, cmd command) error {
 	}
 
 	fmt.Printf("%+v\n", newFeed)
+
+	newFeedFollow := database.CreateFeedFollowParams{
+		ID:        uuid.New(),
+		CreatedAt: now,
+		UpdatedAt: now,
+		UserID:    user.ID,
+		FeedID:    newFeed.ID,
+	}
+
+	feedFollowRecord, err := s.db.CreateFeedFollow(ctx, newFeedFollow)
+	if err != nil {
+		return fmt.Errorf("error creating new feed follow record: %w", err)
+	}
+
+	fmt.Println("You are now following:", feedFollowRecord.FeedName)
 
 	return nil
 }

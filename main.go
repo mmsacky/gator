@@ -37,6 +37,8 @@ func main() {
 	myCommands.register("agg", handlerAggregator)
 	myCommands.register("addfeed", handlerAddFeed)
 	myCommands.register("feeds", handlerFeeds)
+	myCommands.register("follow", handlerFollow)
+	myCommands.register("following", handlerFollowing)
 
 	userArgsCount := len(os.Args)
 
