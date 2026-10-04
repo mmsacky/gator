@@ -14,9 +14,13 @@ RETURNING
     *;
 
 -- name: GetFeeds :many
-SELECT feeds.name AS feed_name, feeds.url, users.name AS user_name
+-- SELECT feeds.name AS feed_name, feeds.url, users.name AS user_name
+SELECT feeds.*, users.name AS user_name
 FROM feeds
     INNER JOIN users ON feeds.user_id = users.id;
+
+-- name: GetFeedByURL :one
+SELECT * FROM feeds WHERE url = $1;
 
 -- name: CreateFeedFollow :one
 
@@ -40,9 +44,6 @@ FROM
     INNER JOIN users ON inserted_feed_follow.user_id = users.id
     INNER JOIN feeds ON inserted_feed_follow.feed_id = feeds.id;
 
--- name: GetFeedByURL :one
-SELECT * FROM feeds WHERE url = $1;
-
 -- name: GetFeedFollowsForUser :many
 SELECT feed_follows.*, feeds.name AS feed_name, users.name AS user_name
 FROM
@@ -51,3 +52,6 @@ FROM
     INNER JOIN users ON feed_follows.user_id = users.id
 WHERE
     feed_follows.user_id = $1;
+
+-- name: DeleteFeedFollow :exec
+DELETE FROM feed_follows WHERE feed_id = $1 AND user_id = $2;

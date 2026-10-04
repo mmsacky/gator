@@ -20,7 +20,7 @@ func handlerFeeds(s *state, _ command) error {
 
 	for _, feed := range feeds {
 		fmt.Println()
-		fmt.Println("Name:", feed.FeedName)
+		fmt.Println("Name:", feed.Name)
 		fmt.Println("URL:", feed.Url)
 		fmt.Println("User:", feed.UserName)
 		fmt.Println()
