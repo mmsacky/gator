@@ -10,7 +10,7 @@ import (
 	"github.com/mmsacky/gator/internal/database"
 )
 
-func handlerAddFeed(s *state, cmd command) error {
+func handlerAddFeed(s *state, cmd command, user database.User) error {
 
 	if len(cmd.args) != 2 {
 		return errors.New("the add feed handler expects two arguments, a feed name and a feed url")
@@ -21,13 +21,6 @@ func handlerAddFeed(s *state, cmd command) error {
 
 	ctx := context.Background()
 	now := time.Now()
-
-	currentUser := s.cfg.UserName
-
-	user, err := s.db.GetUser(ctx, currentUser)
-	if err != nil {
-		return fmt.Errorf("error retrieving database user: %w", err)
-	}
 
 	newFeedParams := database.CreateFeedParams{
 		ID:        uuid.New(),

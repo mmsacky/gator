@@ -7,7 +7,7 @@ import (
 
 const rssFeedURL = "https://www.wagslane.dev/index.xml"
 
-func handlerAggregator(s *state, cmd command) error {
+func handlerAggregator(_ *state, _ command) error {
 
 	ctx := context.Background()
 

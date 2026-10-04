@@ -10,7 +10,7 @@ import (
 	"github.com/mmsacky/gator/internal/database"
 )
 
-func handlerFollow(s *state, cmd command) error {
+func handlerFollow(s *state, cmd command, user database.User) error {
 
 	if len(cmd.args) != 1 {
 		return errors.New("the follow handler expects a single argument, the URL")
@@ -20,12 +20,6 @@ func handlerFollow(s *state, cmd command) error {
 
 	feedURL := cmd.args[0]
 	now := time.Now()
-	username := s.cfg.UserName
-
-	user, err := s.db.GetUser(ctx, username)
-	if err != nil {
-		return fmt.Errorf("error retrieving user: %w", err)
-	}
 
 	feed, err := s.db.GetFeedByURL(ctx, feedURL)
 	if err != nil {

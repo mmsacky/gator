@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-func handlerUsers(s *state, cmd command) error {
+func handlerUsers(s *state, _ command) error {
 
 	ctx := context.Background()
 

@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-func handlerFeeds(s *state, cmd command) error {
+func handlerFeeds(s *state, _ command) error {
 	ctx := context.Background()
 
 	feeds, err := s.db.GetFeeds(ctx)

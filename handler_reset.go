@@ -6,7 +6,7 @@ import (
 	"log"
 )
 
-func handlerReset(s *state, cmd command) error {
+func handlerReset(s *state, _ command) error {
 
 	ctx := context.Background()
 
