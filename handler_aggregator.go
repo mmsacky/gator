@@ -2,21 +2,51 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"time"
 )
 
-const rssFeedURL = "https://www.wagslane.dev/index.xml"
+func handlerAggregator(s *state, cmd command) error {
 
-func handlerAggregator(_ *state, _ command) error {
+	if len(cmd.args) != 1 {
+		return errors.New("the follow handler expects a single argument, the time between requests")
+	}
+
+	timeBetweenRequestsString := cmd.args[0]
+
+	timeBetweenRequests, err := time.ParseDuration(timeBetweenRequestsString)
+	if err != nil {
+		return fmt.Errorf("error converting time string: %w", err)
+	}
+
+	ticker := time.NewTicker(timeBetweenRequests)
+	for ; ; <-ticker.C {
+		fmt.Println("Collecting feeds every ", timeBetweenRequests)
+		scrapeFeeds(s)
+	}
+
+}
+
+func scrapeFeeds(s *state) error {
 
 	ctx := context.Background()
 
-	rssFeed, err := fetchFeed(ctx, rssFeedURL)
+	nextFeed, err := s.db.GetNextFeedToFetch(ctx)
 	if err != nil {
-		return fmt.Errorf("error fetching feed: %w", err)
+		return fmt.Errorf("error retrieving next feed: %w", err)
 	}
 
-	fmt.Printf("%+v\n", rssFeed)
+	err = s.db.MarkFeedFetched(ctx, nextFeed.ID)
+	if err != nil {
+		return fmt.Errorf("error marking feed as fetched: %w", err)
+	}
+
+	RSSFeed, err := fetchFeed(ctx, nextFeed.Url)
+
+	for _, item := range RSSFeed.Channel.Item {
+		fmt.Println(item.Title)
+	}
 
 	return nil
 }
