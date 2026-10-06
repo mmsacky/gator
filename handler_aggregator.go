@@ -2,9 +2,14 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/mmsacky/gator/internal/database"
 )
 
 func handlerAggregator(s *state, cmd command) error {
@@ -23,7 +28,9 @@ func handlerAggregator(s *state, cmd command) error {
 	ticker := time.NewTicker(timeBetweenRequests)
 	for ; ; <-ticker.C {
 		fmt.Println("Collecting feeds every ", timeBetweenRequests)
-		scrapeFeeds(s)
+		if err := scrapeFeeds(s); err != nil {
+			fmt.Println(err)
+		}
 	}
 
 }
@@ -43,10 +50,54 @@ func scrapeFeeds(s *state) error {
 	}
 
 	RSSFeed, err := fetchFeed(ctx, nextFeed.Url)
-
-	for _, item := range RSSFeed.Channel.Item {
-		fmt.Println(item.Title)
+	if err != nil {
+		return fmt.Errorf("error fetching feed: %w", err)
 	}
 
+	for _, item := range RSSFeed.Channel.Item {
+		now := time.Now()
+
+		newPostDescription := sql.NullString{}
+
+		if item.Description != "" {
+			newPostDescription.String = item.Description
+			newPostDescription.Valid = true
+		}
+
+		newPostPublishedAt := sql.NullTime{}
+
+		if item.PubDate != "" {
+			parsePublishedAt, err := time.Parse(time.RFC1123Z, item.PubDate)
+			if err == nil {
+				newPostPublishedAt = sql.NullTime{
+					Time:  parsePublishedAt,
+					Valid: true,
+				}
+
+			}
+
+			newPost := database.CreatePostParams{
+				ID:          uuid.New(),
+				CreatedAt:   now,
+				UpdatedAt:   now,
+				Title:       item.Title,
+				Url:         item.Link,
+				Description: newPostDescription,
+				PublishedAt: newPostPublishedAt,
+				FeedID:      nextFeed.ID,
+			}
+
+			_, err = s.db.CreatePost(ctx, newPost)
+			if err != nil {
+				var pgErr *pgconn.PgError
+				if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+					continue
+				}
+				return fmt.Errorf("unexpected database error: %w", err)
+			}
+
+		}
+
+	}
 	return nil
 }
